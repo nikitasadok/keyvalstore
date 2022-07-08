@@ -17,11 +17,10 @@ func Test_height(t *testing.T) {
 		{
 			name: "one node",
 			args: args{t: &Tree{
-				parent: nil,
-				left:   nil,
-				right:  nil,
-				key:    "somekey",
-				val:    []byte("someval"),
+				left:  nil,
+				right: nil,
+				key:   "somekey",
+				val:   []byte("someval"),
 			}},
 			want: 0,
 		},
@@ -42,11 +41,10 @@ func Test_height(t *testing.T) {
 
 func TestTree_balance(t1 *testing.T) {
 	type fields struct {
-		parent *Tree
-		left   *Tree
-		right  *Tree
-		key    string
-		val    []byte
+		left  *Tree
+		right *Tree
+		key   string
+		val   []byte
 	}
 	tests := []struct {
 		name string
@@ -54,17 +52,12 @@ func TestTree_balance(t1 *testing.T) {
 		want int
 	}{
 		{
-			name: "nil tree",
-			tree: nil,
-			want: 0},
-		{
 			name: "one node",
 			tree: &Tree{
-				parent: nil,
-				left:   nil,
-				right:  nil,
-				key:    "some_key",
-				val:    []byte("some_val"),
+				left:  nil,
+				right: nil,
+				key:   "some_key",
+				val:   []byte("some_val"),
 			},
 			want: 0,
 		},
@@ -91,47 +84,142 @@ func TestTree_balance(t1 *testing.T) {
 	}
 }
 
+func Test_search(t *testing.T) {
+	type args struct {
+		t   *Tree
+		key string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Tree
+	}{
+		{
+			name: "nil tree",
+			args: args{t: nil},
+			want: nil},
+		{
+			name: "one node key exists",
+			args: args{t: &Tree{
+				left:  nil,
+				right: nil,
+				key:   "some_key",
+				val:   []byte("some_val"),
+			}, key: "some_key"},
+			want: &Tree{
+				left:  nil,
+				right: nil,
+				key:   "some_key",
+				val:   []byte("some_val"),
+			}},
+		{
+			name: "one node key doesn't exist",
+			args: args{t: &Tree{
+				left:  nil,
+				right: nil,
+				key:   "some_key",
+				val:   []byte("some_val"),
+			}, key: "some_key_which_doesnt exist"},
+			want: nil,
+		},
+		{
+			name: "bigger tree key exists",
+			args: args{t: constructTreeHeight2Balance1(), key: "u_rootRightRight_key"},
+			want: &Tree{
+				left:  nil,
+				right: nil,
+				key:   "u_rootRightRight_key",
+				val:   []byte("rootRightRight_val"),
+			},
+		},
+		{
+			name: "bigger tree key doesnt exist",
+			args: args{t: constructTreeHeight2Balance1(), key: "some_random_key"},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, search(tt.args.t, tt.args.key), "search(%v, %v)", tt.args.t, tt.args.key)
+		})
+	}
+}
+
+func Test_preorder(t *testing.T) {
+	type args struct {
+		t    *Tree
+		path *[]*Tree
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "nil tree",
+			args: args{
+				t:    nil,
+				path: nil,
+			},
+		},
+		{
+			name: "one node",
+			args: args{
+				t: &Tree{
+					left:  nil,
+					right: nil,
+					key:   "some_key",
+					val:   []byte("some_val"),
+				},
+				path: &[]*Tree{&Tree{
+					key: "some_key",
+					val: []byte("some_val"),
+				}},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			preorder(tt.args.t, tt.args.path)
+		})
+	}
+}
+
 func constructTreeHeight2Balance1() *Tree {
 	root := &Tree{
-		parent: nil,
-		left:   nil,
-		right:  nil,
-		key:    "root_key",
-		val:    []byte("root_val"),
+		left:  nil,
+		right: nil,
+		key:   "root_key",
+		val:   []byte("root_val"),
 	}
 
 	rootLeft := &Tree{
-		parent: root,
-		left:   nil,
-		right:  nil,
-		key:    "rootLeft_key",
-		val:    []byte("rootLeft_val"),
+		left:  nil,
+		right: nil,
+		key:   "k_rootLeft_key",
+		val:   []byte("rootLeft_val"),
 	}
 
 	rootRight := &Tree{
-		parent: root,
-		left:   nil,
-		right:  nil,
-		key:    "rootRight_key",
-		val:    []byte("rootRight_val"),
+		left:  nil,
+		right: nil,
+		key:   "t_rootRight_key",
+		val:   []byte("rootRight_val"),
 	}
 	root.right = rootRight
 	root.left = rootLeft
 
 	rootRightRight := &Tree{
-		parent: rootRight,
-		left:   nil,
-		right:  nil,
-		key:    "rootRightRight_key",
-		val:    []byte("rootRightRight_val"),
+		left:  nil,
+		right: nil,
+		key:   "u_rootRightRight_key",
+		val:   []byte("rootRightRight_val"),
 	}
 
 	rootRightLeft := &Tree{
-		parent: rootRight,
-		left:   nil,
-		right:  nil,
-		key:    "rootRightLeft_key",
-		val:    []byte("rootRightLeft_val"),
+		left:  nil,
+		right: nil,
+		key:   "s_rootRightLeft_key",
+		val:   []byte("rootRightLeft_val"),
 	}
 
 	rootRight.right = rootRightRight
@@ -142,45 +230,40 @@ func constructTreeHeight2Balance1() *Tree {
 
 func constructTreeHeight2BalanceNeg1() *Tree {
 	root := &Tree{
-		parent: nil,
-		left:   nil,
-		right:  nil,
-		key:    "root_key",
-		val:    []byte("root_val"),
+		left:  nil,
+		right: nil,
+		key:   "root_key",
+		val:   []byte("root_val"),
 	}
 
 	rootLeft := &Tree{
-		parent: root,
-		left:   nil,
-		right:  nil,
-		key:    "rootLeft_key",
-		val:    []byte("rootLeft_val"),
+		left:  nil,
+		right: nil,
+		key:   "k_rootLeft_key",
+		val:   []byte("rootLeft_val"),
 	}
 
 	rootRight := &Tree{
-		parent: root,
-		left:   nil,
-		right:  nil,
-		key:    "rootRight_key",
-		val:    []byte("rootRight_val"),
+		left:  nil,
+		right: nil,
+		key:   "s_rootRight_key",
+		val:   []byte("rootRight_val"),
 	}
 	root.right = rootRight
 	root.left = rootLeft
 
 	rootLeftRight := &Tree{
-		parent: rootLeft,
-		left:   nil,
-		right:  nil,
-		key:    "rootLeftRight_key",
-		val:    []byte("rootLeftRight_val"),
+		left:  nil,
+		right: nil,
+		key:   "l_rootLeftRight_key",
+		val:   []byte("rootLeftRight_val"),
 	}
 
 	rootLeftLeft := &Tree{
-		parent: rootLeft,
-		left:   nil,
-		right:  nil,
-		key:    "rootLeftLeft_key",
-		val:    []byte("rootLeftLeft_val"),
+		left:  nil,
+		right: nil,
+		key:   "a_rootLeftLeft_key",
+		val:   []byte("rootLeftLeft_val"),
 	}
 
 	rootLeft.right = rootLeftRight
@@ -191,64 +274,57 @@ func constructTreeHeight2BalanceNeg1() *Tree {
 
 func constructTreeHeight2Balance0() *Tree {
 	root := &Tree{
-		parent: nil,
-		left:   nil,
-		right:  nil,
-		key:    "root_key",
-		val:    []byte("root_val"),
+		left:  nil,
+		right: nil,
+		key:   "root_key",
+		val:   []byte("root_val"),
 	}
 
 	rootLeft := &Tree{
-		parent: root,
-		left:   nil,
-		right:  nil,
-		key:    "rootLeft_key",
-		val:    []byte("rootLeft_val"),
+		left:  nil,
+		right: nil,
+		key:   "k_rootLeft_key",
+		val:   []byte("rootLeft_val"),
 	}
 
 	rootRight := &Tree{
-		parent: root,
-		left:   nil,
-		right:  nil,
-		key:    "rootRight_key",
-		val:    []byte("rootRight_val"),
+		left:  nil,
+		right: nil,
+		key:   "v_rootRight_key",
+		val:   []byte("rootRight_val"),
 	}
 	root.right = rootRight
 	root.left = rootLeft
 
 	rootLeftRight := &Tree{
-		parent: rootLeft,
-		left:   nil,
-		right:  nil,
-		key:    "rootLeftRight_key",
-		val:    []byte("rootLeftRight_val"),
+		left:  nil,
+		right: nil,
+		key:   "l_rootLeftRight_key",
+		val:   []byte("rootLeftRight_val"),
 	}
 
 	rootLeftLeft := &Tree{
-		parent: rootLeft,
-		left:   nil,
-		right:  nil,
-		key:    "rootLeftLeft_key",
-		val:    []byte("rootLeftLeft_val"),
+		left:  nil,
+		right: nil,
+		key:   "a_rootLeftLeft_key",
+		val:   []byte("rootLeftLeft_val"),
 	}
 
 	rootLeft.right = rootLeftRight
 	rootLeft.left = rootLeftLeft
 
 	rootRightRight := &Tree{
-		parent: rootRight,
-		left:   nil,
-		right:  nil,
-		key:    "rootRightRight_key",
-		val:    []byte("rootRightRight_val"),
+		left:  nil,
+		right: nil,
+		key:   "w_rootRightRight_key",
+		val:   []byte("rootRightRight_val"),
 	}
 
 	rootRightLeft := &Tree{
-		parent: rootRight,
-		left:   nil,
-		right:  nil,
-		key:    "rootRightLeft_key",
-		val:    []byte("rootRightLeft_val"),
+		left:  nil,
+		right: nil,
+		key:   "u_rootRightLeft_key",
+		val:   []byte("rootRightLeft_val"),
 	}
 
 	rootRight.right = rootRightRight
