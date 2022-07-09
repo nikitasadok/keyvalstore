@@ -151,8 +151,9 @@ func Test_preorder(t *testing.T) {
 		path *[]*Tree
 	}
 	tests := []struct {
-		name string
-		args args
+		name     string
+		args     args
+		wantPath *[]*Tree
 	}{
 		{
 			name: "nil tree",
@@ -160,6 +161,7 @@ func Test_preorder(t *testing.T) {
 				t:    nil,
 				path: nil,
 			},
+			wantPath: nil,
 		},
 		{
 			name: "one node",
@@ -170,20 +172,67 @@ func Test_preorder(t *testing.T) {
 					key:   "some_key",
 					val:   []byte("some_val"),
 				},
-				path: &[]*Tree{&Tree{
-					key: "some_key",
-					val: []byte("some_val"),
-				}},
+				path: &[]*Tree{},
 			},
+			wantPath: &[]*Tree{
+				{
+					left:  nil,
+					right: nil,
+					key:   "some_key",
+					val:   []byte("some_val"),
+				},
+			},
+		},
+		{
+			name: "height 2 tree",
+			args: args{
+				t:    constructTreeHeight2Balance1(),
+				path: &[]*Tree{},
+			},
+			wantPath: treeHeight2Balance1PreorderTraversal(),
+		},
+		{
+			name: "fully balanced height 2 tree",
+			args: args{
+				t:    constructTreeHeight2Balance0(),
+				path: &[]*Tree{},
+			},
+			wantPath: treeHeight2Balance0PreorderTraversal(),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			preorder(tt.args.t, tt.args.path)
+			assert.Equal(t, tt.wantPath, tt.args.path)
 		})
 	}
 }
 
+func Test_rightRotate(t *testing.T) {
+	type args struct {
+		t *Tree
+	}
+	tests := []struct {
+		name string
+		args args
+		want *Tree
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, rightRotate(tt.args.t), "rightRotate(%v)", tt.args.t)
+		})
+	}
+}
+
+/*
+           root
+         /      \
+   rootLeft    rootRight
+              /         \
+       rootRightLeft  rootRightRight
+*/
 func constructTreeHeight2Balance1() *Tree {
 	root := &Tree{
 		left:  nil,
@@ -228,6 +277,57 @@ func constructTreeHeight2Balance1() *Tree {
 	return root
 }
 
+func treeHeight2Balance1PreorderTraversal() *[]*Tree {
+	root := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "root_key",
+		val:   []byte("root_val"),
+	}
+
+	rootLeft := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "k_rootLeft_key",
+		val:   []byte("rootLeft_val"),
+	}
+
+	rootRight := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "t_rootRight_key",
+		val:   []byte("rootRight_val"),
+	}
+	root.right = rootRight
+	root.left = rootLeft
+
+	rootRightRight := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "u_rootRightRight_key",
+		val:   []byte("rootRightRight_val"),
+	}
+
+	rootRightLeft := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "s_rootRightLeft_key",
+		val:   []byte("rootRightLeft_val"),
+	}
+
+	rootRight.right = rootRightRight
+	rootRight.left = rootRightLeft
+
+	return &[]*Tree{rootLeft, root, rootRightLeft, rootRight, rootRightRight}
+}
+
+/*
+                 root
+               /      \
+         rootLeft    rootRight
+        /        \
+rootLeftLeft    rootLeftRight
+*/
 func constructTreeHeight2BalanceNeg1() *Tree {
 	root := &Tree{
 		left:  nil,
@@ -272,6 +372,95 @@ func constructTreeHeight2BalanceNeg1() *Tree {
 	return root
 }
 
+/*
+                root(-2)
+             /        \
+        rootL(-1)    rootR(0)
+       /     \
+   rootLL(0) rootLR(0)
+  /         \
+rootLLL(0)  rootLLR(0)
+*/
+func constructTreeHeight3BalanceNeg2() *Tree {
+	root := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "root_key",
+		val:   []byte("root_val"),
+	}
+
+	rootL := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "k_rootLeft_key",
+		val:   []byte("rootLeft_val"),
+	}
+
+	rootR := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "s_rootRight_key",
+		val:   []byte("rootRight_val"),
+	}
+	root.right = rootR
+	root.left = rootL
+
+	rootLR := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "l_rootLeftRight_key",
+		val:   []byte("rootLeftRight_val"),
+	}
+
+	rootLL := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "b_rootLeftLeft_key",
+		val:   []byte("rootLeftLeft_val"),
+	}
+
+	rootL.right = rootLR
+	rootL.left = rootLL
+
+	rootLLL := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "a_rootLLL_key",
+		val:   []byte("rootLLL_val"),
+	}
+
+	rootLLR := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "c_rootLLR_key",
+		val:   []byte("rootLLR_key"),
+	}
+
+	rootLL.left = rootLLL
+	rootLL.right = rootLLR
+
+	return root
+}
+
+/*
+                rootL
+             /         \
+        rootLL           root
+       /     \          /     \
+   rootLLL   rootLLR   rootLR  rootR
+see constructTreeHeight3BalanceNeg2 for previous tree configuration and node names
+*/
+func treeHeight3BalanceNeg2PreorderTraversalAfterRightRotate() {
+
+}
+
+/*
+                root
+             /        \
+        rootL         rootR
+       /     \       /     \
+   rootLL   rootLR rootRL  rootRR
+*/
 func constructTreeHeight2Balance0() *Tree {
 	root := &Tree{
 		left:  nil,
@@ -331,4 +520,66 @@ func constructTreeHeight2Balance0() *Tree {
 	rootRight.left = rootRightLeft
 
 	return root
+}
+
+func treeHeight2Balance0PreorderTraversal() *[]*Tree {
+	root := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "root_key",
+		val:   []byte("root_val"),
+	}
+
+	rootLeft := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "k_rootLeft_key",
+		val:   []byte("rootLeft_val"),
+	}
+
+	rootRight := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "v_rootRight_key",
+		val:   []byte("rootRight_val"),
+	}
+	root.right = rootRight
+	root.left = rootLeft
+
+	rootLeftRight := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "l_rootLeftRight_key",
+		val:   []byte("rootLeftRight_val"),
+	}
+
+	rootLeftLeft := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "a_rootLeftLeft_key",
+		val:   []byte("rootLeftLeft_val"),
+	}
+
+	rootLeft.right = rootLeftRight
+	rootLeft.left = rootLeftLeft
+
+	rootRightRight := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "w_rootRightRight_key",
+		val:   []byte("rootRightRight_val"),
+	}
+
+	rootRightLeft := &Tree{
+		left:  nil,
+		right: nil,
+		key:   "u_rootRightLeft_key",
+		val:   []byte("rootRightLeft_val"),
+	}
+
+	rootRight.right = rootRightRight
+	rootRight.left = rootRightLeft
+
+	return &[]*Tree{rootLeftLeft, rootLeft, rootLeftRight, root, rootRightLeft, rootRight, rootRightRight}
+
 }
