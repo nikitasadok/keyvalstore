@@ -88,14 +88,15 @@ func preorder(t *Tree, path *[]*Tree) {
 		return
 	}
 	preorder(t.left, path)
+	fmt.Println("our key", t.key)
 	*path = append(*path, t)
 	preorder(t.right, path)
 }
 
 func rightRotate(t *Tree) *Tree {
 	var pivot, pivotChild *Tree
-	pivotChild = pivot.left
 	pivot = t
+	pivotChild = pivot.left
 
 	pivot.left = pivotChild.right
 	pivotChild.right = pivot
@@ -105,11 +106,11 @@ func rightRotate(t *Tree) *Tree {
 
 func leftRotate(t *Tree) *Tree {
 	var pivot, pivotChild *Tree
-	pivotChild = pivot.right
 	pivot = t
+	pivotChild = pivot.right
 
 	pivot.right = pivotChild.left
-	pivotChild.left = pivotChild
+	pivotChild.left = pivot
 
 	return pivotChild
 }
