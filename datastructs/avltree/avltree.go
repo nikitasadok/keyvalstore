@@ -67,6 +67,25 @@ func insertRec(t *Tree, key string, val []byte) *Tree {
 	return t
 }
 
+// insertWithoutRebuild - for testing purposes
+func insertWithoutRebuild(t *Tree, key string, val []byte) *Tree {
+	if t == nil {
+		t = &Tree{
+			key: key,
+			val: val,
+		}
+		return t
+	}
+
+	if strings.Compare(key, t.key) == -1 {
+		t.left = insertRec(t.left, key, val)
+	} else {
+		t.right = insertRec(t.right, key, val)
+	}
+
+	return t
+}
+
 func search(t *Tree, key string) *Tree {
 	if t != nil {
 		fmt.Println("key:", t.key)
