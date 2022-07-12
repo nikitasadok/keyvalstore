@@ -78,9 +78,9 @@ func insertWithoutRebuild(t *Tree, key string, val []byte) *Tree {
 	}
 
 	if strings.Compare(key, t.key) == -1 {
-		t.left = insertRec(t.left, key, val)
+		t.left = insertWithoutRebuild(t.left, key, val)
 	} else {
-		t.right = insertRec(t.right, key, val)
+		t.right = insertWithoutRebuild(t.right, key, val)
 	}
 
 	return t
@@ -107,7 +107,6 @@ func preorder(t *Tree, path *[]*Tree) {
 		return
 	}
 	preorder(t.left, path)
-	fmt.Println("our key", t.key)
 	*path = append(*path, t)
 	preorder(t.right, path)
 }
@@ -151,8 +150,8 @@ func leftRightRotate(t *Tree) *Tree {
 func rightLeftRotate(t *Tree) *Tree {
 	var pivot, pivotRight, pivotRightLeft *Tree
 	pivot = t
-	pivotRight = t.left
-	pivotRightLeft = t.left.right
+	pivotRight = t.right
+	pivotRightLeft = t.right.left
 
 	pivot.right = pivotRightLeft.left
 	pivotRight.left = pivotRightLeft.right
