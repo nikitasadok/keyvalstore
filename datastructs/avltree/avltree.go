@@ -12,18 +12,11 @@ type Tree struct {
 	val   []byte
 }
 
-func (t *Tree) Insert(key string, val []byte) {
-	if key == t.key {
-		t.val = val
-		return
-	}
 
+func Insert(t *Tree, key string, val []byte) *Tree{
+	return insertRec(t, key, val)
 }
 
-func insert(t *Tree, key string, val []byte) {
-	t = insertRec(t, key, val)
-
-}
 func insertRec(t *Tree, key string, val []byte) *Tree {
 	if t == nil {
 		t = &Tree{
@@ -84,6 +77,15 @@ func insertWithoutRebuild(t *Tree, key string, val []byte) *Tree {
 	}
 
 	return t
+}
+
+func (t *Tree) Search(key string) []byte {
+	node := search(t, key)
+	if node == nil {
+		return nil
+	}
+
+	return node.val
 }
 
 func search(t *Tree, key string) *Tree {
