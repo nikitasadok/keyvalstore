@@ -1,9 +1,10 @@
 package memtable
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
+	"io"
 	"keyvaluestore/datastructs/avltree"
 	"os"
 )
@@ -11,11 +12,6 @@ import (
 type MemTable struct {
 	tree     *avltree.Tree
 	entryLog *os.File
-}
-
-type record struct {
-	key string
-	val []byte
 }
 
 func (m *MemTable) Insert(key string, val []byte) error {
@@ -50,15 +46,7 @@ func (m *MemTable) Delete(key string) error {
 }
 
 func (m *MemTable) writeToEntryLog(key string, val []byte) error {
-	keyLen := len(key)
-	valLen := len(val)
-	buf := make([]byte, 0, 16+keyLen+valLen)
-	binary.LittleEndian.PutUint64(buf[:8], uint64(keyLen))
-	buf = append(buf, []byte(key)...)
-    binary.LittleEndian.PutUint64(buf[len(buf):len(buf) + 8], uint64(valLen))
-    buf = append(buf, val...)
-	_, err := m.entryLog.Write(buf)
-
+	_, err := m.entryLog.Write(m.serializeEntry(key, val))
 	return err
 }
 
@@ -68,20 +56,67 @@ func (m *MemTable) serializeEntry(key string, val []byte) []byte {
 
 	varIntKeyLen := uvarintlen(uint64(keyLen))
 	varIntValLen := uvarintlen(uint64(valLen))
-	buf := make([]byte, varIntValLen + varIntKeyLen +keyLen+valLen)
-	fmt.Println(len(buf))
-	varKeySize := binary.PutUvarint(buf, uint64(keyLen))
+	buf := make([]byte, varIntValLen + varIntKeyLen + keyLen + valLen)
+
+	offset := binary.PutUvarint(buf, uint64(keyLen))
 	for i := 0; i < keyLen; i++ {
-		buf[varKeySize+ i] = key[i]
+		buf[offset + i] = key[i]
+		offset++
 	}
 
-	fmt.Printf("%x\n", buf)
-	varValSize := binary.PutUvarint(buf, uint64(valLen))
+	offset += binary.PutUvarint(buf[offset:], uint64(valLen))
 	for i := 0; i < valLen; i++ {
-		buf[varValSize + i] = val[i]
+		buf[offset + i] = val[i]
 	}
-	fmt.Printf("%x\n", buf)
+
 	return buf
+}
+
+func (m *MemTable) loadFromFile(path string) error{
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	buf := bytes.NewBuffer(file)
+	for {
+		keyLen, err := binary.ReadUvarint(buf)
+		if err != nil {
+			break
+		}
+
+		keyBytes := make([]byte, keyLen)
+		for i := uint64(0); i < keyLen; i++ {
+			keyBytes[i], err = buf.ReadByte()
+			if err != nil {
+				break
+			}
+		}
+
+		valLen, err := binary.ReadUvarint(buf)
+		if err != nil {
+			break
+		}
+
+		valBytes := make([]byte ,valLen)
+		for i := uint64(0); i < valLen; i++ {
+			valBytes[i], err = buf.ReadByte()
+			if err != nil {
+				break
+			}
+		}
+
+		m.tree = avltree.Insert(m.tree, string(keyBytes), valBytes)
+		if err != nil {
+			break
+		}
+	}
+
+	if err == io.EOF {
+		err = nil
+	}
+
+	return err
 }
 
 func uvarintlen(x uint64) int {
