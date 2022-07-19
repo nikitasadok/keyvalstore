@@ -5,13 +5,24 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"keyvaluestore/datastructs/avltree"
 	"os"
 )
 
 type MemTable struct {
-	tree     *avltree.Tree
+	tree     *Tree
 	entryLog *os.File
+}
+
+func New(path string) (*MemTable, error) {
+	f, err := os.OpenFile(path, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MemTable{
+		tree:     nil,
+		entryLog: f,
+	}, nil
 }
 
 func (m *MemTable) Insert(key string, val []byte) error {
@@ -19,7 +30,9 @@ func (m *MemTable) Insert(key string, val []byte) error {
 	if err != nil {
 		return errors.New("cannot insert to entry log")
 	}
-	m.tree = avltree.Insert(m.tree, key, val)
+
+	m.tree = insertRec(m.tree, key, val)
+	// m.tree.Insert(key, val)
 
 	return nil
 }
@@ -41,7 +54,7 @@ func (m *MemTable) Delete(key string) error {
 		return errors.New("cannot insert to entry log")
 	}
 
-	m.tree = avltree.Insert(m.tree, key, nil)
+	m.tree.Insert(key, nil)
 	return nil
 }
 
@@ -61,9 +74,8 @@ func (m *MemTable) serializeEntry(key string, val []byte) []byte {
 	offset := binary.PutUvarint(buf, uint64(keyLen))
 	for i := 0; i < keyLen; i++ {
 		buf[offset + i] = key[i]
-		offset++
 	}
-
+	offset += keyLen
 	offset += binary.PutUvarint(buf[offset:], uint64(valLen))
 	for i := 0; i < valLen; i++ {
 		buf[offset + i] = val[i]
@@ -106,7 +118,7 @@ func (m *MemTable) loadFromFile(path string) error{
 			}
 		}
 
-		m.tree = avltree.Insert(m.tree, string(keyBytes), valBytes)
+		m.tree.Insert(string(keyBytes), valBytes)
 		if err != nil {
 			break
 		}

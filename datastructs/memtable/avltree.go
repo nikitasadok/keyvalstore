@@ -1,7 +1,6 @@
-package avltree
+package memtable
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -13,8 +12,8 @@ type Tree struct {
 }
 
 
-func Insert(t *Tree, key string, val []byte) *Tree{
-	return insertRec(t, key, val)
+func (t *Tree) Insert(key string, val []byte) {
+	*t = *insertRec(t, key, val)
 }
 
 func insertRec(t *Tree, key string, val []byte) *Tree {
@@ -89,9 +88,6 @@ func (t *Tree) Search(key string) []byte {
 }
 
 func search(t *Tree, key string) *Tree {
-	if t != nil {
-		fmt.Println("key:", t.key)
-	}
 	if t == nil || t.key == key {
 		return t
 	}

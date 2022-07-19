@@ -1,4 +1,4 @@
-package avltree
+package memtable
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -361,7 +361,7 @@ func Test_insertRec(t *testing.T) {
 			args: args{
 				t:   constructTreeHeight2BalanceNeg1(),
 				key: "m_rootLRL_key",
-				val:  []byte("m_rootLRL_val"),
+				val: []byte("m_rootLRL_val"),
 			},
 			want: treeHeight2BalanceNeg1AfterInsertLRL(),
 		},
@@ -418,7 +418,7 @@ func constructTreeHeight2Balance1() *Tree {
        /    \                \
    rootL   rootRL          rootRRR
  */
-func treeHeight2Balance1AfterRRRInsert() *Tree{
+func treeHeight2Balance1AfterRRRInsert() *Tree {
 	var root *Tree
 	root = fillTree(root, []treeEntry{
 		{
@@ -457,7 +457,7 @@ func treeHeight2Balance1AfterRRRInsert() *Tree{
        /     \            \
    rootL   rootRLL      rootRR
 */
-func treeHeight2Balance1AfterRLLInsert() *Tree{
+func treeHeight2Balance1AfterRLLInsert() *Tree {
 	var root *Tree
 	root = fillTree(root, []treeEntry{
 		{
@@ -994,7 +994,7 @@ func constructTreeHeight3Balance2RL() *Tree {
        /     \       /     \
    rootL   rootRLL rootRLR  rootRR
 */
-func treeHeight3Balance2LRPreorderTraversalAfterRLRotate() *[]*Tree{
+func treeHeight3Balance2LRPreorderTraversalAfterRLRotate() *[]*Tree {
 	var (
 		root *Tree
 		path *[]*Tree
@@ -1125,7 +1125,7 @@ func treeHeight2Balance0PreorderTraversal() *[]*Tree {
 
 }
 
-func fillTree(t *Tree, entries []treeEntry) *Tree{
+func fillTree(t *Tree, entries []treeEntry) *Tree {
 	for _, e := range entries {
 		t = insertWithoutRebuild(t, e.key, e.val)
 	}

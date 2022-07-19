@@ -2,7 +2,6 @@ package memtable
 
 import (
 	"github.com/stretchr/testify/assert"
-	"keyvaluestore/datastructs/avltree"
 	"math/rand"
 	"os"
 	"testing"
@@ -10,7 +9,7 @@ import (
 
 func TestMemTable_serializeEntry(t *testing.T) {
 	type fields struct {
-		tree     *avltree.Tree
+		tree     *Tree
 		entryLog *os.File
 	}
 	type args struct {
