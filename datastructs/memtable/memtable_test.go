@@ -1,6 +1,7 @@
 package memtable
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"os"
@@ -74,4 +75,70 @@ func serialization256KeyVal(key string, val []byte) []byte {
 	serialized = append(serialized, 0)
 
 	return append(serialized, val...)
+}
+
+func TestMemTable_deserialize(t *testing.T) {
+	type fields struct {
+		tree     *Tree
+		entryLog *os.File
+	}
+	type args struct {
+		buf *bytes.Buffer
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+		wantTree *Tree
+	}{
+		{
+			name: "simple valid key val",
+			fields: fields{
+				tree:     nil,
+				entryLog: nil,
+			},
+			args: args{bytes.NewBuffer([]byte{1, 'k', 1, 'v'})},
+			wantErr: false,
+			wantTree: fillTree(nil, []treeEntry{
+				{
+					key: "k",
+					val: []byte("v"),
+				},
+			}),
+		},
+		{
+			name:    "a little bigger example",
+			fields:  fields{},
+			args:    args{bytes.NewBuffer([]byte{4, 'r', 'o', 'o', 't', 3, 'v', 'a', 'l', 4, 'l', 'k', 'e', 'y',
+				4, 'l', 'v', 'a', 'l', 5, 'v', 'r', 'k','e','y', 4, 'r', 'v', 'a', 'l'})},
+			wantErr: false,
+			wantTree: fillTree(nil ,[]treeEntry{
+				{
+					key: "root",
+					val: []byte("val"),
+				},
+				{
+					key: "lkey",
+					val: []byte("lval"),
+				},
+				{
+					key: "vrkey",
+					val: []byte("rval"),
+				},
+			}),
+		},
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &MemTable{
+				tree:     tt.fields.tree,
+				entryLog: tt.fields.entryLog,
+			}
+			err := m.deserialize(tt.args.buf)
+			assert.Nil(t, err)
+			assert.Equal(t, tt.wantTree, m.tree)
+		})
+	}
 }

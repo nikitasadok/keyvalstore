@@ -32,7 +32,6 @@ func (m *MemTable) Insert(key string, val []byte) error {
 	}
 
 	m.tree = insertRec(m.tree, key, val)
-	// m.tree.Insert(key, val)
 
 	return nil
 }
@@ -91,6 +90,13 @@ func (m *MemTable) loadFromFile(path string) error{
 	}
 
 	buf := bytes.NewBuffer(file)
+
+	return m.deserialize(buf)
+}
+
+func (m *MemTable) deserialize(buf *bytes.Buffer) error{
+	var err error
+
 	for {
 		keyLen, err := binary.ReadUvarint(buf)
 		if err != nil {
@@ -118,7 +124,7 @@ func (m *MemTable) loadFromFile(path string) error{
 			}
 		}
 
-		m.tree.Insert(string(keyBytes), valBytes)
+		m.tree = insertRec(m.tree, string(keyBytes), valBytes)
 		if err != nil {
 			break
 		}
@@ -129,6 +135,28 @@ func (m *MemTable) loadFromFile(path string) error{
 	}
 
 	return err
+}
+
+func (m *MemTable)serializeToSSTable() error {
+	var stack []*Tree
+
+	curr := m.tree
+	stack = append(stack, curr)
+
+	for curr != nil && len(stack) > 0 {
+		for curr != nil {
+			stack = append(stack, curr)
+
+			curr = curr.left
+		}
+
+		curr = stack[len(stack) - 1]
+		stack = stack[:len(stack) - 1]
+
+		m.serializeEntry(curr.key, curr.val)
+		// also write serialized to some file???
+		curr = curr.right
+	}
 }
 
 func uvarintlen(x uint64) int {
