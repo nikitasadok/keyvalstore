@@ -137,26 +137,51 @@ func (m *MemTable) deserialize(buf *bytes.Buffer) error{
 	return err
 }
 
-func (m *MemTable)serializeToSSTable() error {
-	var stack []*Tree
+func (m *MemTable)serializeToSSTable(ssTable, ssTableOffsets io.Writer) error {
+	var (
+		stack []*Tree
+	 	offsetsBuf []byte
+		bytesWritten int
+	)
 
 	curr := m.tree
 	stack = append(stack, curr)
-
 	for curr != nil && len(stack) > 0 {
 		for curr != nil {
 			stack = append(stack, curr)
-
 			curr = curr.left
 		}
 
 		curr = stack[len(stack) - 1]
 		stack = stack[:len(stack) - 1]
 
-		m.serializeEntry(curr.key, curr.val)
-		// also write serialized to some file???
+		entry := m.serializeEntry(curr.key, curr.val)
+		n, err := ssTable.Write(entry)
+		if err != nil {
+			// todo handle
+			return err
+		}
+
+		nSize := uvarintlen(uint64(bytesWritten))
+		nBuf := make([]byte, nSize)
+		binary.PutUvarint(nBuf, uint64(bytesWritten))
+		offsetsBuf = append(offsetsBuf, nBuf...)
+
+		bytesWritten += n
+
 		curr = curr.right
 	}
+
+	nRecordsSize := uvarintlen(uint64(len(offsetsBuf)))
+	nRecordsBuf := make([]byte, nRecordsSize)
+	binary.PutUvarint(nRecordsBuf, uint64(len(offsetsBuf)))
+	_, err := ssTableOffsets.Write(nRecordsBuf)
+	if err != nil {
+		// ...
+	}
+
+	_, err = ssTableOffsets.Write(offsetsBuf)
+	return err
 }
 
 func uvarintlen(x uint64) int {
